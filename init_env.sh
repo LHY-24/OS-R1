@@ -1,0 +1,1 @@
+export WANDB_API_KEY=c16f47e88ceac0dcb3f4d98da9749b6ec34d33a7
