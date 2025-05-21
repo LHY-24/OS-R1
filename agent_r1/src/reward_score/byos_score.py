@@ -1,30 +1,164 @@
 import re
+import json
+
+# def content_check(solution, ground_truth):
+#     def extract_configs(config_str):
+#         configs = config_str.split('\n')
+#         config_set = set()
+#         config_value_dict = {}
+#         for config in configs:
+#             config_name, value = config.split('=')
+#             if value is None:
+#                 continue
+#             config_set.add(config_name)
+#             config_value_dict[config_name] = value
+#         return config_set, config_value_dict
+    
+#     solution_cs, solution_cvd = extract_configs(solution)
+#     truth_cs, truth_cvd = extract_configs(ground_truth)
+    
+#     union_set = solution_cs & truth_cs
+#     # score: 0.4 for name matching, 0.6 for value matching
+#     score = len(union_set) / len(truth_cs)
+#     correct_value = 0
+#     for config in union_set:
+#         if solution_cvd[config] == truth_cvd[config]:
+#             correct_value += 1
+#     score *= correct_value / len(union_set)
+#     return score
 
 def content_check(solution, ground_truth):
-    def extract_configs(config_str):
-        configs = config_str.split('\n')
-        config_set = set()
-        config_value_dict = {}
-        for config in configs:
-            config_name, value = config.split('=')
-            if value is None:
+    
+    def process_bool(answer, truth_json):
+        score = 0.0
+        # extract truth
+        truth = json.loads(truth_json)
+        truth_dict = {}
+        for t in truth:
+            truth_dict[t["config"]] = t["value"]
+        value2str = {
+            0: "decrease",
+            2: "increase"
+        }
+        correct_num = 0
+        # extract solution
+        answers = answer.split("\n")
+        configs = []
+        # define format score
+        bracket_correct = 0 # score 0.1
+        split_correct = 0 # score 0.1
+        value_correct = 0 # score 0.1
+        for ans in answers:
+            # check bracket
+            if ans[0] != '[' or ans[-1] != ']':
+                bracket_correct = -1
+            else:
+                ans = ans[1:-1]
+            # check split
+            split_res = ans.split('-')
+            if len(split_res) != 2:
+                split_correct = -1
                 continue
-            config_set.add(config_name)
-            config_value_dict[config_name] = value
-        return config_set, config_value_dict
+            # check value
+            config, res = split_res
+            config = config.strip()
+            res = res.strip()
+            if res not in ["increase", "decrease", "cannot determine impact without specific context"]:
+                value_correct = -1
+            else:
+                if value_correct == 0:
+                    value_correct = 1
+                configs.append([config, res])
+        # check answer && scoring
+        for i in range(len(configs)):
+            config_name, config_value = configs[i]
+            config_name = config_name.lower()
+            if config_name in truth_dict.keys() and value2str[truth_dict[config_name]] == config_value:
+                correct_num += 1
+        
+        # add to score
+        if bracket_correct == 0:
+            score += 0.1
+        if split_correct == 0:
+            score += 0.1
+        if value_correct == 1:
+            score += 0.1
+        score += 0.7 * (correct_num / len(truth))
+        return score
+        
+    def process_menu(answer, truth_json):
+        score = 0.0
+        # extract truth
+        truth = json.loads(truth_json)
+        truth_set = set()
+        for t in truth:
+            truth_set.add(t.lower())
+        correct_num = 0
+        # define format score
+        bracket_correct = 0 # score 0.1
+        # extract solution
+        answers = answer.split("\n")
+        for ans in answers:
+            if ans[0] != '[' or ans[-1] != ']':
+                bracket_correct = -1
+            else:
+                ans = ans[1:-1]
+            if ans.lower() in truth_set:
+                correct_num += 1
+        # add to score
+        if bracket_correct == 0:
+            score += 0.1
+        score += 0.9 * (correct_num / len(truth))
+        return score
     
-    solution_cs, solution_cvd = extract_configs(solution)
-    truth_cs, truth_cvd = extract_configs(ground_truth)
-    
-    union_set = solution_cs & truth_cs
-    # score: 0.4 for name matching, 0.6 for value matching
-    score = len(union_set) / len(truth_cs)
-    correct_value = 0
-    for config in union_set:
-        if solution_cvd[config] == truth_cvd[config]:
-            correct_value += 1
-    score *= correct_value / len(union_set)
-    return score
+    def process_choice(answer, truth):
+        score = 0.0
+        # extract truth
+        truth = truth.lower()
+        # define format score
+        bracket_correct = 0 # score 0.2
+        # extract solution
+        answer.strip()
+        if answer[0] != '[' or answer[-1] != ']':
+            bracket_correct = -1
+        else:
+            answer = answer[1:-1]
+        # add to score
+        if bracket_correct == 0:
+            score += 0.2
+        if answer.lower() == truth:
+            score += 0.8
+        return score
+
+    def process_value(answer, truth):
+        score = 0.0
+        # extract truth
+        truth = truth.split("\n")
+        truth_set = set()
+        for t in truth:
+            truth_set.add(t.lower())
+        correct_num = 0
+        # extract answers
+        answers = answer.split("\n")
+        for answer in answers:
+            if answer.lower() in truth_set:
+                correct_num += 1
+        # add to score
+        score += correct_num / len(truth)
+        return score
+
+    process_ty_dict = {
+        "Bool": process_bool,
+        "Menu": process_menu,
+        "Choice": process_choice,
+        "Value": process_value
+    }
+
+    # extract ground truth
+    qa_type, answer_json = ground_truth.split("\t") # qa_type is on of ["Bool", "Menu", "Choice", "Value"]
+    return process_ty_dict[qa_type](solution, answer_json)
+
+
 
 def extract_solution(solution_str):
     """Extract the answer from the solution string."""

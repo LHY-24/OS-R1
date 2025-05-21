@@ -130,8 +130,9 @@ class GenKnowledgeTool(Tool):
     ):
         name = "query_knowledge_base"
         description = (
-            "Retrieves specific, grounded knowledge for a given text prompt using the internal LightRAG system. "
-            "Use this for detailed info from internal documents (e.g., OS kernel details), not for general web search."
+            "This tool can be used to generate detailed knowledge for given configs."
+            # "Retrieves specific, grounded knowledge for a given text prompt using the internal LightRAG system. "
+            # "Use this for detailed info from internal documents (e.g., OS kernel details), not for general web search."
         )
         # Parameters for the agent to provide
         parameters = {
@@ -209,8 +210,9 @@ class GenConfigsKnowledgeTool(Tool):
     ):
         name = "analyze_config_impact"
         description = (
-            "Given a list of configuration item names/descriptions and an optimization target description, "
-            "uses the internal LightRAG system to identify which configurations might affect the target."
+            "This tool can be used to generate detailed knowledge for given configs."
+            # "Given a list of configuration item names/descriptions and an optimization target description, "
+            # "uses the internal LightRAG system to identify which configurations might affect the target."
         )
         # Parameters for the agent to provide
         parameters = {

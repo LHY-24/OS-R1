@@ -30,7 +30,8 @@ def _default_tools(env):
         return [GenConfigsKnowledgeTool()]
     elif env == 'knowledge_tools':
         # Return both LightRAG-based tools together
-        return [GenKnowledgeTool(), GenConfigsKnowledgeTool()]
+        # return [GenKnowledgeTool(), GenConfigsKnowledgeTool()]
+        return [GenConfigsKnowledgeTool()]
     elif env == 'all':
         # Return all available tools
         return [

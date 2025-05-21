@@ -1,4 +1,5 @@
 def _default_compute_score_format(data_source, solution_str, extra_info=None):
+    # print(solution_str)
     if data_source == 'hotpotqa/hotpot_qa':
         from . import qa_em_and_format
         res = qa_em_and_format.compute_score_format(solution_str)
