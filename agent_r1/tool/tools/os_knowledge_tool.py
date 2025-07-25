@@ -2,12 +2,14 @@
 
 
 """
-BYOS Knowledge tools implementation for knowledge generation and config evaluation
+Kernel knowledge tools implementation for knowledge generation and config evaluation
 """
 
 import os
 import json
 from typing import Dict, List, Any, Optional
+
+import traceback
 
 # --- Tool Base Import ---
 try:
@@ -97,6 +99,7 @@ class _LightRAGCore:
             return str(result)  # Ensure string output
         except Exception as e:
             print(f"[ERROR] LightRAG Core gen_knowledge error: {e}")
+            print(traceback.format_exc())
             return f"Error: Exception during LightRAG query: {type(e).__name__}"
 
     def gen_configs_knowledge(self, configs: List[str], target: str) -> str:
@@ -221,7 +224,7 @@ class GenConfigsKnowledgeTool(Tool):
                 "configs": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "A list of configuration item names or their descriptions."
+                    "description": "A list of config names to be processed. You should use all of them as the parameters of the tool."
                 },
                 "target": {
                     "type": "string",

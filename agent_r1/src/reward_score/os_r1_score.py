@@ -1,5 +1,7 @@
 import re
 import json
+import pdb
+import traceback
 
 # def content_check(solution, ground_truth):
 #     def extract_configs(config_str):
@@ -38,9 +40,11 @@ def content_check(solution, ground_truth):
             truth_dict[t["config"]] = t["value"]
         value2str = {
             0: "decrease",
-            2: "increase"
+            2: "increase",
+            -1: "cannot determine impact without specific context"
         }
         correct_num = 0
+        error_num = 0
         # extract solution
         answers = answer.split("\n")
         configs = []
@@ -49,6 +53,8 @@ def content_check(solution, ground_truth):
         split_correct = 0 # score 0.1
         value_correct = 0 # score 0.1
         for ans in answers:
+            if len(ans) == 0:
+                continue
             # check bracket
             if ans[0] != '[' or ans[-1] != ']':
                 bracket_correct = -1
@@ -73,8 +79,12 @@ def content_check(solution, ground_truth):
         for i in range(len(configs)):
             config_name, config_value = configs[i]
             config_name = config_name.lower()
-            if config_name in truth_dict.keys() and value2str[truth_dict[config_name]] == config_value:
-                correct_num += 1
+            if config_name in truth_dict.keys():
+                if value2str[truth_dict[config_name]] == config_value:
+                    correct_num += 1
+                del truth_dict[config_name]
+            else:
+                error_num += 1
         
         # add to score
         if bracket_correct == 0:
@@ -83,7 +93,8 @@ def content_check(solution, ground_truth):
             score += 0.1
         if value_correct == 1:
             score += 0.1
-        score += 0.7 * (correct_num / len(truth))
+        ERR_SCORE = 0.0
+        score += 0.7 * (correct_num / len(truth)) - error_num * ERR_SCORE
         return score
         
     def process_menu(answer, truth_json):
@@ -94,21 +105,28 @@ def content_check(solution, ground_truth):
         for t in truth:
             truth_set.add(t.lower())
         correct_num = 0
+        error_num = 0
         # define format score
         bracket_correct = 0 # score 0.1
         # extract solution
         answers = answer.split("\n")
         for ans in answers:
+            if len(ans) == 0:
+                continue
             if ans[0] != '[' or ans[-1] != ']':
                 bracket_correct = -1
             else:
                 ans = ans[1:-1]
             if ans.lower() in truth_set:
                 correct_num += 1
+                truth_set.remove(ans.lower())
+            else:
+                error_num += 1
         # add to score
         if bracket_correct == 0:
             score += 0.1
-        score += 0.9 * (correct_num / len(truth))
+        ERR_SCORE = 0.0
+        score += 0.9 * (correct_num / len(truth)) - error_num * ERR_SCORE
         return score
     
     def process_choice(answer, truth):
@@ -119,6 +137,8 @@ def content_check(solution, ground_truth):
         bracket_correct = 0 # score 0.2
         # extract solution
         answer.strip()
+        if len(answer) == 0:
+            return .0
         if answer[0] != '[' or answer[-1] != ']':
             bracket_correct = -1
         else:
@@ -188,22 +208,25 @@ def compute_score_format(solution_str):
         if not assistant_blocks:
             return 0.0
         
+        assistant_block_has_score = False
+        
         # Perfect format requires at least one assistant block and matching tool blocks if tool calls exist
         # Check first assistant block contains <think> tags
         for i, assistant_block in enumerate(assistant_blocks[:-1]):
             if assistant_block.count('<think>') == 1 and assistant_block.count('</think>') == 1 and assistant_block.count('<tool_call>') == 1 and assistant_block.count('</tool_call>') == 1:
                 think_match = re.search(r'^<think>(.*?)</think>\n<tool_call>(.*?)</tool_call>$', assistant_block, re.DOTALL)
                 # soft_think_match = re.search(r'<think>(.*?)</think>(.*?)<tool_call>(.*?)</tool_call>', assistant_block, re.DOTALL)
-                if think_match:
+                if think_match and not assistant_block_has_score:
                     # format_reward += 0.2 * (0.8 ** i)
-                    format_reward += 0.5
+                    assistant_block_has_score = True
+                    format_reward += 0.45
 
         # Check the last assistant block contains <answer> tags
         if assistant_blocks:  # 确保有至少一个assistant块
             last_assistant_block = assistant_blocks[-1]
             think_answer_match = re.search(r'^<think>(.*?)</think>\n<answer>(.*?)</answer>$', last_assistant_block, re.DOTALL)
             if think_answer_match:
-                format_reward += 0.5
+                format_reward += 0.55
     except Exception as e:
         print(f"[DEBUG] Error in compute_score_format: {e}")
         return 0.0
@@ -230,9 +253,13 @@ def compute_score_answer(solution_str, ground_truth):
             # elif subem_check(answer, ground_truth):
             #     answer_reward = 0.5
             answer_reward = content_check(answer, ground_truth)
+            if answer_reward > 1:
+                with open("/root/Agent-R1/solution.log", "a+") as f:
+                    f.write("SOLUTION\n" + solution_str + "\nTRUTH\n" + ground_truth +"\nANSWER REWARD\n" + str(answer_reward) + "\n\n\n")
         
     except Exception as e:
         print(f"[DEBUG] Error in compute_score_answer: {e}")
+        print(traceback.format_exc())
         return 0.0
     
     return answer_reward
@@ -246,10 +273,14 @@ def compute_score_format_answer(solution_str, ground_truth):
         answer_reward = compute_score_answer(solution_str, ground_truth)
 
         format_reward = min(format_reward, 1.0)
-        if format_reward == 1.0:
-            return -1.0 + format_reward + answer_reward
+        reward = .0
+        if format_reward >= 0.99:
+            reward = -1.0 + format_reward + answer_reward
         else:
-            return -1.0 + format_reward
+            reward = -1.0 + format_reward
+        # with open("/root/Agent-R1/solution.log", "a+") as f:
+        #     f.write("SOLUTION\n" + solution_str + "\nTRUTH\n" + ground_truth +"\nREWARD\n" + str(reward) + "\n\n\n")
+        return reward
     except Exception as e:
         print(f"[DEBUG] Error in compute_score_format_answer: {e}")
         return 0.0

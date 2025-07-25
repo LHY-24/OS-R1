@@ -210,9 +210,7 @@ def step_batch(envs: List['ToolEnv'], action_texts: List[str]):
         
         # try:
         # Try batch execution
-        print("[DEBUG BATCH EXECUTE]: args list = ", args_list)
         batch_results = tool.batch_execute(args_list)
-        print("\n\n\n\n\n\n\n")
         # print(f"[DEBUG] batch_results: {batch_results}")
         
         # Process results

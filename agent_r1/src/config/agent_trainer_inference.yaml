@@ -1,12 +1,12 @@
 data:
   tokenizer: null
-  train_files: ~/data/rlhf/gsm8k/train.parquet
-  val_files: ~/data/rlhf/gsm8k/test.parquet
+  train_files: ~/data/os_r1/train.parquet
+  val_files: ~/data/os_r1/validation.parquet
   prompt_key: prompt
-  max_prompt_length: 512
-  max_response_length: 512
-  max_response_length_single_turn: 256
-  max_tool_response_length: 512
+  max_prompt_length: 4096
+  max_response_length: 4096
+  max_response_length_single_turn: 2048
+  max_tool_response_length: 2048
   train_batch_size: 1024
   val_batch_size: null # DEPRECATED: Validation datasets are sent to inference engines as a whole batch, which will schedule the memory themselves
   return_raw_input_ids: False  # This should be set to true when the tokenizer between policy and rm differs
@@ -20,7 +20,9 @@ data:
 actor_rollout_ref:
   hybrid_engine: True
   model:
-    path: ~/models/deepseek-llm-7b-chat
+    # path: ~/models/deepseek-llm-7b-chat
+    path: 'Qwen/Qwen2.5-3B-Instruct'
+    # path: 'Qwen/Qwen2-1.5B-Instruct'
     # path: 'deepseek-ai/deepseek-llm-7b-chat'
     # path: '/root/models/deepseek-llm-7b-chat'
     external_lib: null
@@ -31,8 +33,8 @@ actor_rollout_ref:
     strategy: fsdp  # This is for backward-compatibility
     ppo_mini_batch_size: 256
     ppo_micro_batch_size: null # will be deprecated, use ppo_micro_batch_size_per_gpu
-    ppo_micro_batch_size_per_gpu: null
-    # ppo_micro_batch_size_per_gpu: 4
+    # ppo_micro_batch_size_per_gpu: null
+    ppo_micro_batch_size_per_gpu: 4
     use_dynamic_bsz: False
     ppo_max_token_len_per_gpu: 16384 # n * ${data.max_prompt_length} + ${data.max_response_length}
     grad_clip: 1.0
@@ -68,8 +70,8 @@ actor_rollout_ref:
         # transformer_layer_cls_to_wrap: None
         min_num_params: 0
     log_prob_micro_batch_size: null # will be deprecated, use log_prob_micro_batch_size_per_gpu
-    log_prob_micro_batch_size_per_gpu: null
-    # log_prob_micro_batch_size_per_gpu: 4
+    # log_prob_micro_batch_size_per_gpu: null
+    log_prob_micro_batch_size_per_gpu: 4
     log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
     log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
     ulysses_sequence_parallel_size: ${actor_rollout_ref.actor.ulysses_sequence_parallel_size} # sp size
@@ -93,8 +95,8 @@ actor_rollout_ref:
     max_model_len: null
     max_num_seqs: 1024
     log_prob_micro_batch_size: null # will be deprecated, use log_prob_micro_batch_size_per_gpu
-    log_prob_micro_batch_size_per_gpu: null
-    # log_prob_micro_batch_size_per_gpu: 4
+    # log_prob_micro_batch_size_per_gpu: null
+    log_prob_micro_batch_size_per_gpu: 4
     log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
     log_prob_max_token_len_per_gpu: ${actor_rollout_ref.actor.ppo_max_token_len_per_gpu}
     disable_log_stats: True
@@ -136,8 +138,8 @@ critic:
       fsdp_size: -1
   ppo_mini_batch_size: ${actor_rollout_ref.actor.ppo_mini_batch_size}
   ppo_micro_batch_size: null # will be deprecated, use ppo_micro_batch_size_per_gpu
-  ppo_micro_batch_size_per_gpu: null
-  # ppo_micro_batch_size_per_gpu: 4
+  # ppo_micro_batch_size_per_gpu: null
+  ppo_micro_batch_size_per_gpu: 4
   forward_micro_batch_size: ${critic.ppo_micro_batch_size}
   forward_micro_batch_size_per_gpu: ${critic.ppo_micro_batch_size_per_gpu}
   use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
@@ -197,9 +199,10 @@ trainer:
   nnodes: 1
   n_gpus_per_node: 4
   save_freq: -1
-  # auto: find the last ckpt to resume. If can't find, start from scratch
-  resume_mode: auto # or disable or resume_path if 
-  # # Replace the placeholder with the correct absolute path
+  # # auto: find the last ckpt to resume. If can't find, start from scratch
+  # resume_mode: auto # or disable or resume_path if 
+  # Replace the placeholder with the correct absolute path
+  resume_mode: '/root/Agent-R1/checkpoints-backup/os-r1-instruct/ppo/global_step_71'
   resume_from_path: False
   test_freq: -1
   critic_warmup: 0
@@ -227,4 +230,4 @@ tool:
     </tool_response><|im_end|>
     <|im_start|>assistant
     <think>
-  env: search
+  env: knowledge_tools
