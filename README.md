@@ -44,3 +44,5 @@ bash run_grpo_os_r1.sh
 cd /path/to/OS-R1/Inference
 python3 Inference.py /path/to/linux/kernel -t "Tuning target" --config-path "/path/to/OS-R1/agent_r1/src/config" --config-name "agent_trainer_inference"
 ```
+
+LLM judge code is at agent_r1/src/reward_score/os_r1_judge_score.py. Judge score dataset is the same as origin score.

@@ -14,6 +14,7 @@
 """
 The main entry point to run the PPO algorithm
 """
+import ray
 
 import logging
 import os
@@ -66,7 +67,7 @@ def get_sharding_strategy(device_mesh):
         raise NotImplementedError(f"Get device mesh ndim={device_mesh.ndim}, but only support 1 or 2")
     return sharding_strategy
 
-
+@ray.remote # Add this
 class ActorRolloutRefWorker(Worker):
     """
     This worker can be instantiated as a standalone actor or a standalone rollout or a standalone reference policy
@@ -614,7 +615,7 @@ class ActorRolloutRefWorker(Worker):
         if self._is_offload_optimizer:
             offload_fsdp_optimizer(self.actor_optimizer)
 
-
+@ray.remote # Add this
 class CriticWorker(Worker):
 
     def __init__(self, config):

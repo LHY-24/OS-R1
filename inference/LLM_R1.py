@@ -11,13 +11,13 @@ from platform import processor
 from hydra import compose, initialize
 from omegaconf import OmegaConf
 
-from agent_r1.src.fsdp_workers_debug import ActorRolloutRefWorker
-from agent_r1.llm_agent.generation import ToolGenerationManager, ToolGenerationConfig
-from agent_r1.tool import ToolEnv
-from agent_r1.tool.tools import _default_tools
-from verl import DataProto
-from verl.utils import hf_tokenizer
-from verl.single_controller.ray import RayResourcePool, RayWorkerGroup, RayClassWithInitArgs
+from ..agent_r1.src.fsdp_workers import ActorRolloutRefWorker
+from ..agent_r1.llm_agent.generation import ToolGenerationManager, ToolGenerationConfig
+from ..agent_r1.tool import ToolEnv
+from ..agent_r1.tool.tools import _default_tools
+from ..verl import DataProto
+from ..verl.utils import hf_tokenizer
+from ..verl.single_controller.ray import RayResourcePool, RayWorkerGroup, RayClassWithInitArgs
 
 class ChatContext:
     def __init__(self, target, config_path, config_name):
