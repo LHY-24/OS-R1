@@ -8,8 +8,8 @@ export CUDA_LAUNCH_BLOCKING=1
 export PYTHONPATH=/root/Agent-R1_lyc/Agent-R1/verl/:$PYTHONPATH
 
 python3 -m agent_r1.src.main_agent \
-    data.train_files=/root/data/os_r1/train.parquet \
-    data.val_files=/root/data/os_r1/validation.parquet \
+    data.train_files=/root/OS-R1/data/os_r1/train.parquet \
+    data.val_files=/root/OS-R1/data/os_r1/validation.parquet \
     data.train_batch_size=32 \
     data.max_prompt_length=4096 \
     data.max_response_length=4096 \

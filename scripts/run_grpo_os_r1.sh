@@ -7,8 +7,8 @@ export CUDA_LAUNCH_BLOCKING=1
 
 python3 -m agent_r1.src.main_agent \
     algorithm.adv_estimator=grpo \
-    data.train_files=/root/data/os_r1/train.parquet \
-    data.val_files=/root/data/os_r1/validation.parquet \
+    data.train_files=/root/OS-R1/data/os_r1/train.parquet \
+    data.val_files=/root/OS-R1/data/os_r1/validation.parquet \
     data.train_batch_size=128 \
     data.max_prompt_length=4096 \
     data.max_response_length=4096 \
